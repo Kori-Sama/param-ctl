@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="param-controller",
-    version="0.1.1",
+    version="0.1.2",
     author="Kori-Sama",
     author_email="Miyohashikori457@gmail.com",
     description="A lightweight parameter remote controller for embedded device debugging",
