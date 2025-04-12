@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="param-controller",
-    version="0.1.2",
+    version="0.1.5",
     author="Kori-Sama",
     author_email="Miyohashikori457@gmail.com",
     description="A lightweight parameter remote controller for embedded device debugging",
@@ -30,8 +30,4 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",
-    install_requires=[
-        "flask>=2.0.0",
-        "numpy>=1.20.0",
-    ],
 )
