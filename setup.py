@@ -14,10 +14,14 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Kori-Sama/param-ctl",
-    packages=find_packages(),
+    packages=find_packages(exclude=['param_ctl.templates.*', 'param_ctl.static.*']),
     include_package_data=True,
     package_data={
-        'param_ctl': ['templates/*.html', 'static/*'],
+        'param_ctl': [
+            'templates/*.html',
+            'static/*.js',
+            'static/*.css'
+        ],
     },
     classifiers=[
         "Programming Language :: Python :: 3",
