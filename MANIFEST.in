@@ -1,0 +1,4 @@
+include README.md
+include requirements.txt
+recursive-include param_ctl/templates *
+recursive-include param_ctl/static *
