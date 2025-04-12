@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="param-ctl",
+    name="param-controller",
     version="0.1.0",
     author="Kori-Sama",
     author_email="Miyohashikori457@gmail.com",
