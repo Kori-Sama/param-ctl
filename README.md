@@ -12,7 +12,7 @@ A lightweight parameter remote controller for modifying parameters remotely duri
 ## Installation
 
 ```bash
-pip install param-ctl 
+pip install param-controller
 ```
 
 ## Usage

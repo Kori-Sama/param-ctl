@@ -1,72 +1,70 @@
-name: publish python package to PyPI
+# This workflow will upload a Python Package to PyPI when a release is created
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
 
-on: # 这里我设置了两个事件，一般的push tag以v开头，用来测试发布，而release用来正式发布
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Upload Python Package
+
+on:
   release:
     types: [published]
-  push:
-    # Alternative: only build for tags.
-    tags:
-      - "v*"
+
+permissions:
+  contents: read
+
 jobs:
-  # Build the documentation and upload the static HTML files as an artifact.
-  build_wheels: # 这里分别用了别人现成的脚本来在多平台上编译，实际上这个任务要在每个os上面都跑一遍
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix: # 这里为什么叫matrix？因为它会根据给出的所有条件做MxN次，不过我这里用的脚本不需要给出Python版本
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: "recursive"
-
-      - name: build wheels
-        uses: pypa/cibuildwheel@v2.16.5
-        env:
-          CIBW_BUILD_FRONTEND: build
-          CIBW_SKIP: "*-win32 *-manylinux_i686 pp*" # 按照这里的设置，所有允许的python版本都要执行64位编译
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
-
-  build_sdist: # 源代码打包单平台即可
-    name: Build source distribution
+  release-build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build sdist
-        run: pipx run build --sdist
-
-      - uses: actions/upload-artifact@v4
+      - uses: actions/setup-python@v5
         with:
-          name: cibw-sdist
-          path: dist/*.tar.gz
+          python-version: "3.x"
 
-  upload: # 上传到PyPI，注意我这里需要在前两个任务完成的情况下才能执行
-    needs: [build_wheels, build_sdist]
-    runs-on: ubuntu-latest # 这里也是只用一个系统，否则会有问题（）
-    environment: pypi
+      - name: Build release distributions
+        run: |
+          # NOTE: put your own distribution build steps here.
+          python -m pip install build
+          python -m build
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+  pypi-publish:
+    runs-on: ubuntu-latest
+    needs:
+      - release-build
     permissions:
-      id-token: write # 这里很重要，因为我启用了PyPI白名单，需要将临时生成的token写到任务程序里
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+
+    # Dedicated environments with protections for publishing are strongly recommended.
+    # For more information, see: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
+    environment:
+      name: pypi
+      # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
+      # url: https://pypi.org/p/YOURPROJECT
+      #
+      # ALTERNATIVE: if your GitHub Release name is the PyPI project version string
+      # ALTERNATIVE: exactly, uncomment the following line instead:
+      # url: https://pypi.org/project/YOURPROJECT/${{ github.event.release.name }}
+
     steps:
-      - uses: actions/download-artifact@v4 # 由于这个系统跟前面的不一样，所以前两个任务需要先上载打好的包，这里再下下来
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
         with:
-          # unpacks all CIBW artifacts into dist/
-          pattern: cibw-*
-          path: dist
-          merge-multiple: true
+          name: release-dists
+          path: dist/
 
-      - name: publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.12
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          packages-dir: dist/
-
-      - name: publish to PYPI
-        if: github.event_name == 'release' && github.event.action == 'published' # 有了这句话才能只在发布的时候执行
-        uses: pypa/gh-action-pypi-publish@v1.8.12
+      - name: Publish release distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
